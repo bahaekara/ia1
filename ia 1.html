@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>متنبئ التفاعلات الكيميائية مع الذكاء الاصطناعي</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            margin: 20px 0;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #6A0572;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #6A0572, #AB83A1);
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #444;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        input:focus, select:focus {
+            border-color: #6A0572;
+            box-shadow: 0 0 10px rgba(106, 5, 114, 0.2);
+            outline: none;
+            transform: scale(1.01);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6A0572, #AB83A1);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(106, 5, 114, 0.3);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 1.1em;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        #result.active {
+            border-color: #6A0572;
+            box-shadow: 0 5px 15px rgba(106, 5, 114, 0.2);
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .loading {
+            color: #6A0572;
+            font-style: italic;
+            text-align: center;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '...';
+            position: absolute;
+            animation: ellipsis 1.5s infinite;
+        }
+
+        @keyframes ellipsis {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
+        }
+
+        .equation-list {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(236, 240, 241, 0.7);
+            border-radius: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #6A0572 #ecf0f1;
+        }
+
+        .equation-list:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .equation-list h3 {
+            color: #6A0572;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            position: relative;
+        }
+
+        .equation-list h3::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #6A0572, #AB83A1);
+            margin: 8px auto 0;
+            border-radius: 2px;
+        }
+
+        .equation-list ul {
+            list-style: none;
+        }
+
+        .equation-list li {
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            color: #444;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .equation-list li:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(-5px);
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            color: #6A0572;
+        }
+
+        .molecule {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.4;
+            animation: float 15s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.4;
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-800px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="molecules-container"></div>
+    
+    <div class="container">
+        <h1>متنبئ التفاعلات الكيميائية مع الذكاء الاصطناعي</h1>
+        <div class="form-group">
+            <label>أدخل المواد المتفاعلة (مثال: H₂ + O₂):</label>
+            <input type="text" id="reactants" placeholder="مثال: H₂ + O₂">
+        </div>
+        <div class="form-group">
+            <label>اختر نوع التفاعل (اختياري):</label>
+            <select id="reactionType">
+                <option value="">اختر النوع</option>
+                <option value="combustion">احتراق</option>
+                <option value="decomposition">تحلل</option>
+                <option value="substitution">استبدال</option>
+                <option value="redox">تأكسد واختزال</option>
+                <option value="precipitation">ترسيب</option>
+                <option value="acid-base">تفاعل حمض-قاعدة</option>
+                <option value="combination">اتحاد</option>
+            </select>
+        </div>
+        <button onclick="predictReaction()">توقع التفاعل</button>
+        <div id="result"></div>
+
+        <div id="add-reaction-form" style="display: none; margin-top: 25px;">
+            <h3 style="color: #6A0572; text-align: center;">إضافة تفاعل جديد</h3>
+            <div class="form-group">
+                <label>المواد المتفاعلة:</label>
+                <input type="text" id="new-reactants" placeholder="مثال: H₂ + O₂">
+            </div>
+            <div class="form-group">
+                <label>المنتجات:</label>
+                <input type="text" id="new-products" placeholder="مثال: H₂O">
+            </div>
+            <div class="form-group">
+                <label>المعادلة المتوازنة:</label>
+                <input type="text" id="new-balanced" placeholder="مثال: 2H₂ + O₂ → 2H₂O">
+            </div>
+            <div class="form-group">
+                <label>نوع التفاعل:</label>
+                <select id="new-reaction-type">
+                    <option value="">اختر النوع</option>
+                    <option value="combustion">احتراق</option>
+                    <option value="decomposition">تحلل</option>
+                    <option value="substitution">استبدال</option>
+                    <option value="redox">تأكسد واختزال</option>
+                    <option value="precipitation">ترسيب</option>
+                    <option value="acid-base">تفاعل حمض-قاعدة</option>
+                    <option value="combination">اتحاد</option>
+                </select>
+            </div>
+            <button onclick="addNewReaction()">إضافة التفاعل</button>
+        </div>
+
+        <div class="equation-list">
+            <h3>أمثلة على التفاعلات الكيميائية</h3>
+            <ul id="equationList"></ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 0.9em; color: #666;">
+            تم إنشاء هذا التطبيق بالتعاون و بتطبيق لافكار زمولي لينة ملاك
+        </div>
+    </div>
+
+    <script>
+        // قاعدة بيانات مع 50 تفاعلاً كيميائياً
+        const chemicalReactions = [
+            { reactants: "H₂ + O₂", products: "H₂O", balanced: "2H₂ + O₂ → 2H₂O", type: "combustion" },
+            { reactants: "CH₄ + O₂", products: "CO₂ + H₂O", balanced: "CH₄ + 2O₂ → CO₂ + 2H₂O", type: "combustion" },
+            { reactants: "C + O₂", products: "CO₂", balanced: "C + O₂ → CO₂", type: "combustion" },
+            { reactants: "S + O₂", products: "SO₂", balanced: "S + O₂ → SO₂", type: "combustion" },
+            { reactants: "Mg + O₂", products: "MgO", balanced: "2Mg + O₂ → 2MgO", type: "redox" },
+            { reactants: "Fe + O₂", products: "Fe₂O₃", balanced: "4Fe + 3O₂ → 2Fe₂O₃", type: "redox" },
+            { reactants: "H₂O", products: "H₂ + O₂", balanced: "2H₂O → 2H₂ + O₂", type: "decomposition" },
+            { reactants: "H₂CO₃", products: "H₂O + CO₂", balanced: "H₂CO₃ → H₂O + CO₂", type: "decomposition" },
+            { reactants: "CaCO₃", products: "CaO + CO₂", balanced: "CaCO₃ → CaO + CO₂", type: "decomposition" },
+            { reactants: "Na + Cl₂", products: "NaCl", balanced: "2Na + Cl₂ → 2NaCl", type: "substitution" },
+            { reactants: "Zn + CuSO₄", products: "ZnSO₄ + Cu", balanced: "Zn + CuSO₄ → ZnSO₄ + Cu", type: "substitution" },
+            { reactants: "Fe + CuSO₄", products: "FeSO₄ + Cu", balanced: "Fe + CuSO₄ → FeSO₄ + Cu", type: "substitution" },
+            { reactants: "AgNO₃ + NaCl", products: "AgCl + NaNO₃", balanced: "AgNO₃ + NaCl → AgCl + NaNO₃", type: "precipitation" },
+            { reactants: "BaCl₂ + Na₂SO₄", products: "BaSO₄ + NaCl", balanced: "BaCl₂ + Na₂SO₄ → BaSO₄ + 2NaCl", type: "precipitation" },
+            { reactants: "C₂H₅OH + O₂", products: "CO₂ + H₂O", balanced: "C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O", type: "combustion" },
+            { reactants: "Al + O₂", products: "Al₂O₃", balanced: "4Al + 3O₂ → 2Al₂O₃", type: "redox" },
+            { reactants: "KClO₃", products: "KCl + O₂", balanced: "2KClO₃ → 2KCl + 3O₂", type: "decomposition" },
+            { reactants: "Cu + AgNO₃", products: "Cu(NO₃)₂ + Ag", balanced: "Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag", type: "substitution" },
+            { reactants: "H₂ + Cl₂", products: "HCl", balanced: "H₂ + Cl₂ → 2HCl", type: "substitution" },
+            { reactants: "Pb(NO₃)₂ + KI", products: "PbI₂ + KNO₃", balanced: "Pb(NO₃)₂ + 2KI → PbI₂ + 2KNO₃", type: "precipitation" },
+            { reactants: "Ca + Cl₂", products: "CaCl₂", balanced: "Ca + Cl₂ → CaCl₂", type: "substitution" },
+            { reactants: "K + H₂O", products: "KOH + H₂", balanced: "2K + 2H₂O → 2KOH + H₂", type: "redox" },
+            { reactants: "Na₂CO₃ + HCl", products: "NaCl + H₂O + CO₂", balanced: "Na₂CO₃ + 2HCl → 2NaCl + H₂O + CO₂", type: "acid-base" },
+            { reactants: "NH₃ + HCl", products: "NH₄Cl", balanced: "NH₃ + HCl → NH₄Cl", type: "acid-base" },
+            { reactants: "CaO + H₂O", products: "Ca(OH)₂", balanced: "CaO + H₂O → Ca(OH)₂", type: "combination" },
+            { reactants: "P₄ + O₂", products: "P₂O₅", balanced: "P₄ + 5O₂ → 2P₂O₅", type: "combustion" },
+            { reactants: "SO₂ + O₂", products: "SO₃", balanced: "2SO₂ + O₂ → 2SO₃", type: "combination" },
+            { reactants: "CO + O₂", products: "CO₂", balanced: "2CO + O₂ → 2CO₂", type: "combustion" },
+            { reactants: "H₂S + O₂", products: "H₂O + SO₂", balanced: "2H₂S + 3O₂ → 2H₂O + 2SO₂", type: "combustion" },
+            { reactants: "Cl₂ + H₂O", products: "HCl + HOCl", balanced: "Cl₂ + H₂O → HCl + HOCl", type: "redox" },
+            { reactants: "C₃H₈ + O₂", products: "CO₂ + H₂O", balanced: "C₃H₈ + 5O₂ → 3CO₂ + 4H₂O", type: "combustion" },
+            { reactants: "N₂ + H₂", products: "NH₃", balanced: "N₂ + 3H₂ → 2NH₃", type: "combination" },
+            { reactants: "H₂O₂", products: "H₂O + O₂", balanced: "2H₂O₂ → 2H₂O + O₂", type: "decomposition" },
+            { reactants: "FeCl₃ + NaOH", products: "Fe(OH)₃ + NaCl", balanced: "FeCl₃ + 3NaOH → Fe(OH)₃ + 3NaCl", type: "precipitation" },
+            { reactants: "Mg + HCl", products: "MgCl₂ + H₂", balanced: "Mg + 2HCl → MgCl₂ + H₂", type: "redox" },
+            { reactants: "CuO + H₂SO₄", products: "CuSO₄ + H₂O", balanced: "CuO + H₂SO₄ → CuSO₄ + H₂O", type: "acid-base" },
+            { reactants: "NaOH + HCl", products: "NaCl + H₂O", balanced: "NaOH + HCl → NaCl + H₂O", type: "acid-base" },
+            { reactants: "Zn + H₂SO₄", products: "ZnSO₄ + H₂", balanced: "Zn + H₂SO₄ → ZnSO₄ + H₂", type: "redox" },
+            { reactants: "Fe₂O₃ + CO", products: "Fe + CO₂", balanced: "Fe₂O₃ + 3CO → 2Fe + 3CO₂", type: "redox" },
+            { reactants: "K₂CO₃ + HCl", products: "KCl + H₂O + CO₂", balanced: "K₂CO₃ + 2HCl → 2KCl + H₂O + CO₂", type: "acid-base" },
+            { reactants: "CuSO₄ + NaOH", products: "Cu(OH)₂ + Na₂SO₄", balanced: "CuSO₄ + 2NaOH → Cu(OH)₂ + Na₂SO₄", type: "precipitation" },
+            { reactants: "C₆H₁₂O₆ + O₂", products: "CO₂ + H₂O", balanced: "C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O", type: "combustion" },
+            { reactants: "Na + H₂O", products: "NaOH + H₂", balanced: "2Na + 2H₂O → 2NaOH + H₂", type: "redox" },
+            { reactants: "Al + HCl", products: "AlCl₃ + H₂", balanced: "2Al + 6HCl → 2AlCl₃ + 3H₂", type: "redox" },
+            { reactants: "Ca(OH)₂ + CO₂", products: "CaCO₃ + H₂O", balanced: "Ca(OH)₂ + CO₂ → CaCO₃ + H₂O", type: "combination" },
+            { reactants: "NH₄Cl", products: "NH₃ + HCl", balanced: "NH₄Cl → NH₃ + HCl", type: "decomposition" },
+            { reactants: "MgO + H₂O", products: "Mg(OH)₂", balanced: "MgO + H₂O → Mg(OH)₂", type: "combination" },
+            { reactants: "FeS + O₂", products: "Fe₂O₃ + SO₂", balanced: "4FeS + 7O₂ → 2Fe₂O₃ + 4SO₂", type: "combustion" },
+            { reactants: "ZnO + HCl", products: "ZnCl₂ + H₂O", balanced: "ZnO + 2HCl → ZnCl₂ + H₂O", type: "acid-base" }
+        ];
+
+        // تحميل المعادلات في القائمة
+        function loadEquations() {
+            const list = document.getElementById('equationList');
+            chemicalReactions.forEach(reaction => {
+                const li = document.createElement('li');
+                li.textContent = `${reaction.balanced} (${reaction.type})`;
+                list.appendChild(li);
+            });
+        }
+
+        // استدعاء الدالة عند التحميل
+        loadEquations();
+
+        // دالة لتنظيف النص المدخل
+        function normalizeInput(input) {
+            return input
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/\s*\+\s*/g, ' + ');
+        }
+
+        // دالة التنبؤ المحسنة
+        function predictReaction() {
+            const reactantsInput = document.getElementById('reactants').value;
+            const reactionType = document.getElementById('reactionType').value;
+            const resultDiv = document.getElementById('result');
+            const addForm = document.getElementById('add-reaction-form');
+            resultDiv.innerHTML = '<p class="loading">جارٍ الحساب</p>';
+            resultDiv.classList.add('active');
+            addForm.style.display = 'none';
+
+            if (!reactantsInput) {
+                resultDiv.innerHTML = '<p class="error">يرجى إدخال المواد المتفاعلة!</p>';
+                return;
+            }
+
+            const normalizedInput = normalizeInput(reactantsInput);
+
+            const reaction = chemicalReactions.find(r => 
+                normalizeInput(r.reactants) === normalizedInput && 
+                (!reactionType || r.type === reactionType)
+            );
+
+            if (reaction) {
+                resultDiv.innerHTML = `
+                    <p><strong>المنتجات المتوقعة:</strong> ${reaction.products}</p>
+                    <p><strong>المعادلة المتوازنة:</strong> ${reaction.balanced}</p>
+                    <p><strong>نوع التفاعل:</strong> ${reaction.type}</p>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <p class="error">لم يتم العثور على تفاعل مطابق!</p>
+                    <p>تأكد من التنسيق (مثال: "H₂ + O₂").</p>
+                    <p>يمكنك إضافة تفاعل جديد أدناه:</p>
+                `;
+                addForm.style.display = 'block';
+                document.getElementById('new-reactants').value = reactantsInput;
+            }
+
+            setTimeout(() => resultDiv.classList.remove('active'), 300);
+        }
+
+        // دالة إضافة تفاعل جديد
+        function addNewReaction() {
+            const reactants = document.getElementById('new-reactants').value;
+            const products = document.getElementById('new-products').value;
+            const balanced = document.getElementById('new-balanced').value;
+            const type = document.getElementById('new-reaction-type').value;
+            const resultDiv = document.getElementById('result');
+            const addForm = document.getElementById('add-reaction-form');
+
+            if (!reactants || !products || !balanced || !type) {
+                resultDiv.innerHTML = '<p class="error">يرجى ملء جميع الحقول!</p>';
+                return;
+            }
+
+            const newReaction = {
+                reactants: reactants,
+                products: products,
+                balanced: balanced,
+                type: type
+            };
+
+            chemicalReactions.push(newReaction);
+
+            const list = document.getElementById('equationList');
+            const li = document.createElement('li');
+            li.textContent = `${balanced} (${type})`;
+            list.appendChild(li);
+
+            resultDiv.innerHTML = `
+                <p><strong>تمت الإضافة بنجاح!</strong></p>
+                <p><strong>المنتجات المتوقعة:</strong> ${products}</p>
+                <p><strong>المعادلة المتوازنة:</strong> ${balanced}</p>
+                <p><strong>نوع التفاعل:</strong> ${type}</p>
+            `;
+            addForm.style.display = 'none';
+        }
+
+        // إضافة جزيئات متحركة في الخلفية
+        const moleculesContainer = document.getElementById('molecules-container');
+        const molecules = ['⚛', '🧪', '🔬', '💧', '🔥'];
+        function createMolecule() {
+            const molecule = document.createElement('div');
+            molecule.classList.add('molecule');
+            molecule.textContent = molecules[Math.floor(Math.random() * molecules.length)];
+            molecule.style.left = Math.random() * 100 + 'vw';
+            molecule.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            moleculesContainer.appendChild(molecule); 
+            setTimeout(() => molecule.remove(), 15000);
+        }
+
+        setInterval(createMolecule, 2000);
+    </script>
+</body>
+</html>
